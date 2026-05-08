@@ -438,6 +438,19 @@ html, body {
   #main { flex-direction: column; }
   #sidebar { width: 100%; }
 }
+
+/* Footer */
+#site-footer {
+  background: #000;
+  border-top: 1px solid var(--border2);
+  padding: 14px 24px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.5px;
+  line-height: 1.8;
+  margin-top: 20px;
+}
 </style>
 </head>
 <body>
@@ -929,5 +942,10 @@ document.getElementById('dr-skill').addEventListener('keydown', e => {
   if (e.key === 'Enter') rollD100();
 });
 </script>
+
+<footer id="site-footer">
+  Fan-made resource for personal home game use only — not an official Delta Green product.<br>
+  Delta Green is a trademark of the Delta Green Partnership. Not affiliated with, licensed by, or endorsed by Arc Dream Publishing or the Delta Green Partnership.
+</footer>
 </body>
 </html>
