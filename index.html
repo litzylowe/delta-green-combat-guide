@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DELTA GREEN // COMBAT GUIDE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --bg:        #0f0f0d;
+  --surface:   #181815;
+  --surface2:  #1f1f1b;
+  --surface3:  #272722;
+  --border:    #2e2e28;
+  --border2:   #3a3a32;
+  --text:      #ddd8cc;
+  --text-dim:  #b8aa96;
+  --text-faint:#827568;
+  --green:     #2d4a1e;
+  --green-l:   #3d6129;
+  --green-t:   #8ec870;
+  --amber:     #f0cc44;
+  --amber-d:   #2e2008;
+  --amber-t:   #d8c898;
+  --red:       #8b1a1a;
+  --red-l:     #c0392b;
+  --red-t:     #e88080;
+  --blue:      #1a3d5c;
+  --blue-l:    #2a5a80;
+  --blue-t:    #80c0e8;
+  --crit-col:  #f0cc44;
+  --success-col:#8ec870;
+  --fail-col:  #e88080;
+  --fumble-col:#ff5555;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+}
+
+/* ============================
+   TOP BAR
+   ============================ */
+#topbar {
+  background: #000;
+  border-bottom: 2px solid var(--border2);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px;
+  height: 52px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.tb-title {
+  font-family: 'Special Elite', serif;
+  font-size: 16px;
+  letter-spacing: 3px;
+  color: var(--amber);
+  text-transform: uppercase;
+}
+.tb-round {
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+.tb-round span { color: var(--amber); font-size: 16px; }
+#tb-phase {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  padding: 3px 10px;
+  border: 1px solid;
+  text-transform: uppercase;
+}
+.phase-idle    { color: var(--text-faint); border-color: var(--border2); }
+.phase-attack  { color: var(--red-t);      border-color: var(--red);     background: rgba(139,26,26,0.15); }
+.phase-defense { color: var(--blue-t);     border-color: var(--blue-l);  background: rgba(26,61,92,0.2); }
+.phase-end     { color: var(--amber);      border-color: var(--amber-d); background: rgba(46,32,8,0.3); }
+.tb-spacer { flex: 1; }
+.tb-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 6px 14px;
+  border: 1px solid;
+  cursor: pointer;
+  text-transform: uppercase;
+  background: transparent;
+}
+.tb-btn-round { color: var(--text-dim); border-color: var(--border2); }
+.tb-btn-round:hover { background: var(--surface2); color: var(--text); }
+.tb-btn-attack { color: var(--red-t); border-color: var(--red); }
+.tb-btn-attack:hover { background: rgba(139,26,26,0.25); }
+.tb-btn-defend { color: var(--blue-t); border-color: var(--blue-l); }
+.tb-btn-defend:hover { background: rgba(26,61,92,0.3); }
+.tb-btn-reset  { color: var(--text-faint); border-color: var(--border); }
+.tb-btn-reset:hover  { color: var(--text-dim); border-color: var(--border2); }
+
+/* ============================
+   MAIN LAYOUT
+   ============================ */
+#main {
+  display: flex;
+  gap: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+}
+
+/* ============================
+   FLOW PANEL (left / main)
+   ============================ */
+#flow-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Breadcrumb */
+#breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  min-height: 22px;
+}
+.bc-item { font-size: 11px; color: var(--text-faint); }
+.bc-item.bc-cur { color: var(--text-dim); }
+.bc-sep { font-size: 11px; color: var(--text-faint); }
+
+/* Idle state */
+#flow-idle {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 60px 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.idle-icon { font-size: 48px; opacity: 0.4; }
+.idle-title {
+  font-family: 'Special Elite', serif;
+  font-size: 22px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.idle-sub { font-size: 13px; color: var(--text-faint); letter-spacing: 1px; }
+.idle-start-btns {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+/* Flow card */
+#flow-card { display: none; }
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  border: 1px solid;
+}
+.sb-decision { color: var(--amber);   border-color: var(--amber-d); background: rgba(46,32,8,0.5); }
+.sb-info     { color: var(--green-t); border-color: var(--green);   background: rgba(45,74,30,0.25); }
+.sb-choice   { color: var(--blue-t);  border-color: var(--blue);    background: rgba(26,61,92,0.25); }
+.sb-end      { color: var(--text-dim);border-color: var(--border2); background: rgba(0,0,0,0.3); }
+
+.step-title {
+  font-family: 'Special Elite', serif;
+  font-size: 26px;
+  color: var(--text);
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+.step-text {
+  font-size: 15px;
+  color: var(--amber-t);
+  line-height: 1.8;
+  margin-bottom: 12px;
+  white-space: pre-line;
+}
+.step-note {
+  font-size: 13px;
+  color: var(--text-dim);
+  background: var(--surface);
+  border-left: 3px solid var(--border2);
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+.step-note.dice-cue {
+  border-left-color: var(--green-l);
+  background: rgba(45,74,30,0.12);
+  color: var(--green-t);
+}
+
+.flow-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.flow-btn-row { display: flex; gap: 8px; }
+.flow-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 1px;
+  padding: 13px 18px;
+  border: 1px solid;
+  cursor: pointer;
+  text-transform: uppercase;
+  flex: 1;
+  text-align: center;
+  transition: background 0.12s;
+  line-height: 1;
+}
+.fb-yes     { color: var(--green-t); border-color: var(--green-l); background: rgba(45,74,30,0.2); }
+.fb-yes:hover { background: rgba(45,74,30,0.45); }
+.fb-no      { color: var(--red-t);   border-color: var(--red);     background: rgba(139,26,26,0.15); }
+.fb-no:hover  { background: rgba(139,26,26,0.35); }
+.fb-neutral { color: var(--blue-t);  border-color: var(--blue-l);  background: rgba(26,61,92,0.15); }
+.fb-neutral:hover { background: rgba(26,61,92,0.35); }
+.fb-cont {
+  color: var(--green-t); border-color: var(--green-l);
+  background: rgba(45,74,30,0.15);
+}
+.fb-cont:hover { background: rgba(45,74,30,0.35); }
+.fb-end {
+  color: var(--amber); border-color: var(--amber-d);
+  background: rgba(46,32,8,0.25);
+}
+.fb-end:hover { background: rgba(46,32,8,0.55); }
+
+.flow-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.flow-back {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  color: var(--text-faint);
+  cursor: pointer;
+  text-transform: uppercase;
+  background: transparent;
+}
+.flow-back:hover { color: var(--text-dim); border-color: var(--border2); }
+
+/* ============================
+   RIGHT SIDEBAR: DICE + STATUS
+   ============================ */
+#sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.side-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+}
+.side-card-header {
+  background: #000;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border2);
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+.side-card-body { padding: 14px; }
+
+/* Dice roller */
+.dr-skill-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.dr-skill-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+.dr-skill-input {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--amber);
+  padding: 5px 8px;
+  width: 70px;
+  outline: none;
+  text-align: center;
+}
+.dr-skill-input:focus { border-color: var(--amber-d); }
+.dr-skill-pct { font-size: 13px; color: var(--text-faint); }
+.dr-roll-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  letter-spacing: 1px;
+  padding: 11px;
+  width: 100%;
+  border: 1px solid var(--green-l);
+  background: rgba(45,74,30,0.25);
+  color: var(--green-t);
+  cursor: pointer;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  transition: background 0.12s;
+}
+.dr-roll-btn:hover { background: rgba(45,74,30,0.5); }
+.dr-result {
+  text-align: center;
+  padding: 14px 8px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transition: border-color 0.2s;
+  min-height: 90px;
+  justify-content: center;
+}
+.dr-result-number { font-family: 'Special Elite', serif; font-size: 42px; line-height: 1; }
+.dr-result-label  { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; }
+.dr-result-detail { font-size: 12px; color: var(--text-dim); }
+.dr-idle     { color: var(--text-faint); }
+.dr-critical { color: var(--crit-col);    border-color: var(--amber-d) !important; }
+.dr-success  { color: var(--success-col); border-color: var(--green) !important; }
+.dr-failure  { color: var(--fail-col);    border-color: var(--red) !important; }
+.dr-fumble   { color: var(--fumble-col);  border-color: var(--red-l) !important; }
+
+/* Other dice */
+.dr-other-dice {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.dr-die-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  padding: 5px 0;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  flex: 1;
+  text-align: center;
+}
+.dr-die-btn:hover { background: var(--surface3); color: var(--text); }
+.dr-die-result {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--amber-t);
+  min-height: 18px;
+}
+
+/* Status chips */
+.status-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.status-chip {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  padding: 5px 10px;
+  border: 1px solid;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+}
+.sc-off        { color: var(--text-faint); border-color: var(--border); background: transparent; }
+.sc-off:hover  { border-color: var(--border2); color: var(--text-dim); }
+.sc-suppressed { color: var(--amber);   border-color: var(--amber-d); background: rgba(46,32,8,0.5); }
+.sc-pinned     { color: var(--red-t);   border-color: var(--red);     background: rgba(139,26,26,0.25); }
+.sc-hurt       { color: #e8a060;        border-color: #7a4010;        background: rgba(122,64,16,0.25); }
+.sc-dying      { color: var(--red-t);   border-color: var(--red-l);   background: rgba(192,57,43,0.25); }
+.sc-insane     { color: #c49aff;        border-color: #6b3bb0;        background: rgba(107,59,176,0.25); }
+.sc-unconscious{ color: var(--blue-t);  border-color: var(--blue-l);  background: rgba(26,61,92,0.25); }
+
+/* Quick-ref card */
+.ref-table { width: 100%; border-collapse: collapse; }
+.ref-table td {
+  font-size: 12px;
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  vertical-align: top;
+}
+.ref-table td:first-child { color: var(--amber-t); width: 38%; }
+.ref-table tr:last-child td { border-bottom: none; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border2); }
+
+/* Big start buttons (idle) */
+.big-start-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  letter-spacing: 2px;
+  padding: 14px 28px;
+  border: 1px solid;
+  cursor: pointer;
+  text-transform: uppercase;
+  text-align: center;
+  transition: background 0.12s;
+}
+.bsb-attack  { color: var(--red-t);  border-color: var(--red);    background: rgba(139,26,26,0.1); }
+.bsb-attack:hover  { background: rgba(139,26,26,0.3); }
+.bsb-defend  { color: var(--blue-t); border-color: var(--blue-l); background: rgba(26,61,92,0.1); }
+.bsb-defend:hover  { background: rgba(26,61,92,0.3); }
+
+@media (max-width: 680px) {
+  #main { flex-direction: column; }
+  #sidebar { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="tb-title">Delta Green</div>
+  <div class="tb-round">Round <span id="tb-round-num">1</span></div>
+  <div id="tb-phase" class="phase-idle">Idle</div>
+  <div class="tb-spacer"></div>
+  <button class="tb-btn tb-btn-attack" onclick="startFlow('b_action')">⚔ Attack</button>
+  <button class="tb-btn tb-btn-defend" onclick="startFlow('def_start')">🛡 Defend</button>
+  <button class="tb-btn tb-btn-round" onclick="incRound()">+ Round</button>
+  <button class="tb-btn tb-btn-reset" onclick="resetFlow()">↺ Reset</button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- FLOW PANEL -->
+  <div id="flow-panel">
+
+    <!-- Breadcrumb -->
+    <div id="breadcrumb"></div>
+
+    <!-- Idle -->
+    <div id="flow-idle">
+      <div class="idle-icon">⬡</div>
+      <div class="idle-title">Combat Guide</div>
+      <div class="idle-sub">Select an action to begin your turn</div>
+      <div class="idle-start-btns">
+        <button class="big-start-btn bsb-attack" onclick="startFlow('b_action')">⚔ I'm Attacking</button>
+        <button class="big-start-btn bsb-defend" onclick="startFlow('def_start')">🛡 I'm Defending</button>
+      </div>
+    </div>
+
+    <!-- Active flow card -->
+    <div id="flow-card">
+      <div id="step-badge" class="step-badge"></div>
+      <div id="step-title" class="step-title"></div>
+      <div id="step-text"  class="step-text"></div>
+      <div id="step-note"  class="step-note" style="display:none"></div>
+      <div id="flow-btns"  class="flow-btns"></div>
+      <div class="flow-nav">
+        <button class="flow-back" onclick="flowBack()" id="back-btn">← Back</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+
+    <!-- Dice Roller -->
+    <div class="side-card">
+      <div class="side-card-header">Dice Roller</div>
+      <div class="side-card-body">
+        <div class="dr-skill-row">
+          <span class="dr-skill-label">Skill</span>
+          <input type="number" class="dr-skill-input" id="dr-skill" min="1" max="99" value="" placeholder="—">
+          <span class="dr-skill-pct">%</span>
+        </div>
+        <button class="dr-roll-btn" onclick="rollD100()">Roll D100</button>
+        <div class="dr-result dr-idle" id="dr-result">
+          <div class="dr-result-number" id="dr-num">—</div>
+          <div class="dr-result-label"  id="dr-label">waiting</div>
+          <div class="dr-result-detail" id="dr-detail"></div>
+        </div>
+        <div class="dr-other-dice">
+          <button class="dr-die-btn" onclick="rollRaw(4)">D4</button>
+          <button class="dr-die-btn" onclick="rollRaw(6)">D6</button>
+          <button class="dr-die-btn" onclick="rollRaw(8)">D8</button>
+          <button class="dr-die-btn" onclick="rollRaw(10)">D10</button>
+          <button class="dr-die-btn" onclick="rollRaw(20)">D20</button>
+        </div>
+        <div class="dr-die-result" id="dr-die-result"></div>
+      </div>
+    </div>
+
+    <!-- Status Chips -->
+    <div class="side-card">
+      <div class="side-card-header">Conditions</div>
+      <div class="side-card-body">
+        <div class="status-chips" id="status-chips"></div>
+      </div>
+    </div>
+
+    <!-- Quick Reference -->
+    <div class="side-card">
+      <div class="side-card-header">Quick Reference</div>
+      <div class="side-card-body">
+        <table class="ref-table">
+          <tr><td>Critical hit</td><td>Roll ≤ skill ÷ 5</td></tr>
+          <tr><td>Fumble</td><td>Roll 99–100 (skill &lt;100)</td></tr>
+          <tr><td>Surprise atk</td><td>+20%, success = crit</td></tr>
+          <tr><td>Helpless tgt</td><td>Auto-success, no roll</td></tr>
+          <tr><td>Each mod</td><td>±20% (max +40%)</td></tr>
+          <tr><td>HP &lt; half</td><td>Serious wound</td></tr>
+          <tr><td>HP = 0</td><td>Dying</td></tr>
+          <tr><td>WP = 0</td><td>Incapacitated</td></tr>
+          <tr><td>SAN ≤ BP</td><td>Temporarily insane</td></tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ============================
+// FLOWS
+// ============================
+const FLOWS = {
+  // ATTACK
+  b_action:{type:'choice',phase:'attack',title:'B) Choose Your Action',
+    text:'What are you doing this turn?',
+    note:'Each advantage or disadvantage = ±20% | Max advantage: +40%',
+    options:[
+      {label:'Attack',next:'c_surprise'},{label:'Called Shot',next:'c_surprise'},
+      {label:'Disarm',next:'c_surprise'},{label:'Pin',next:'c_surprise'},
+      {label:'Aim',next:'aim'},{label:'Escape',next:'escape'},
+      {label:'Move / Wait / Other',next:'end_turn'},
+    ]},
+  aim:{type:'info',phase:'attack',title:'Aim',
+    text:'You spend this turn aiming. Gain a bonus on your next attack roll.',next:'end_turn'},
+  escape:{type:'info',phase:'attack',title:'Escape',
+    text:'You attempt to escape a pin or grapple. Opposed roll applies.',next:'end_turn'},
+  c_surprise:{type:'decision',phase:'attack',title:'C) Surprise Attack?',
+    text:'Does your target not know combat has started?',yes:'c_helpless',no:'d_modifiers'},
+  c_helpless:{type:'decision',phase:'attack',title:'Is the Target Totally Helpless?',
+    text:'Are they bound, asleep, or completely unable to act?',yes:'c_murder',no:'c_unaware'},
+  c_murder:{type:'info',phase:'attack',title:'No Roll Needed',
+    text:'Target is totally helpless — your attack automatically succeeds.',
+    note:'Skip straight to G) and calculate damage.',next:'g_damage'},
+  c_unaware:{type:'decision',phase:'attack',title:'Target Active but Unaware?',
+    text:'Are they conscious and moving, but unaware you\'re about to attack?',
+    yes:'c_bonus',no:'d_modifiers'},
+  c_bonus:{type:'info',phase:'attack',title:'⚡ Surprise Bonus',
+    text:'Your attack roll is at +20%. A success automatically counts as a critical hit.',
+    note:'Apply the +20% now, then proceed.',next:'d_modifiers'},
+  d_modifiers:{type:'info',phase:'attack',title:'D) Apply Combat Modifiers',
+    text:'Apply all situational modifiers before rolling.',
+    note:'Each advantage or disadvantage = ±20%\nMax advantage: +40% | Disadvantage: no limit.',
+    next:'e_roll'},
+  e_roll:{type:'info',phase:'attack',title:'E) Make Your Attack Roll',
+    text:'Roll d100 against your modified attack skill.\nNote whether it\'s a critical, success, or fumble.',
+    note:'Enter your skill % in the dice roller and roll. →',
+    diceHint:true,next:'e_called'},
+  e_called:{type:'decision',phase:'attack',title:'Called Shot?',
+    text:'Did you declare this as a called shot?',yes:'e_crowd',no:'f_type'},
+  e_crowd:{type:'decision',phase:'attack',title:'Shooting Into a Crowd?',
+    text:'Is your target surrounded by or in the middle of other people?',
+    yes:'e_crowd_info',no:'f_type'},
+  e_crowd_info:{type:'info',phase:'attack',title:'Crowd Fire',
+    text:'Hit: you hit your intended target.\nMiss: a random bystander is hit instead.',next:'f_type'},
+  f_type:{type:'choice',phase:'attack',title:'F) Weapon Type',
+    text:'What kind of attack is this?',
+    options:[
+      {label:'F1) Melee / Hand-to-Hand',next:'f1'},
+      {label:'F2) Ranged Weapon',next:'f2'},
+    ]},
+  f1:{type:'info',phase:'attack',title:'F1) Melee / Hand-to-Hand',
+    text:'Modify your damage roll by your Strength bonus.',
+    note:'STR 13–15: +1 | STR 16–17: +1D4 | STR 18: +1D6',next:'g_damage'},
+  f2:{type:'info',phase:'attack',title:'F2) Ranged Weapon',
+    text:'Use the weapon\'s listed damage. No Strength modifier for ranged.',next:'g_damage'},
+  g_damage:{type:'info',phase:'attack',title:'G) Calculate Total Damage',
+    text:'Roll your weapon\'s damage dice and add any modifiers.',
+    note:'Use the dice roller for damage rolls.',next:'g_cover'},
+  g_cover:{type:'decision',phase:'attack',title:'Target Using Cover?',
+    text:'Is your target behind cover that could absorb or reduce damage?',
+    yes:'g_cover_info',no:'g_armor'},
+  g_cover_info:{type:'info',phase:'attack',title:'Cover',
+    text:'Reduce damage dealt to the target. Overflow goes to the cover\'s HP — when it hits 0, cover is destroyed.',
+    next:'g_armor'},
+  g_armor:{type:'decision',phase:'attack',title:'Target Using Armor?',
+    text:'Is your target wearing body armor or other protection?',
+    yes:'g_armor_info',no:'h_crit'},
+  g_armor_info:{type:'info',phase:'attack',title:'Armor',
+    text:'Reduce damage by the armor\'s rating. Armor does NOT protect against Called Shots or successful Lethality rolls.',
+    next:'h_crit'},
+  h_crit:{type:'decision',phase:'attack',title:'Was Your Roll a Critical?',
+    text:'Did you roll under 1/5 of your modified skill?',
+    yes:'h_leth_c',no:'h_leth_n'},
+  h_leth_c:{type:'decision',phase:'attack',title:'Weapon Has Lethality? (Critical)',
+    text:'Does your weapon have a Lethality rating?',yes:'h_leth_c_info',no:'h_kill_c'},
+  h_leth_c_info:{type:'info',phase:'attack',title:'💀 Critical + Lethality',
+    text:'Double the Lethality rating. If the roll fails, deal double HP damage instead.',next:'h_apply'},
+  h_kill_c:{type:'decision',phase:'attack',title:'Weapon Has Kill Radius? (Critical)',
+    text:'Does your weapon have a Kill Radius?',yes:'h_kill_info',no:'h_supp_c'},
+  h_supp_c:{type:'decision',phase:'attack',title:'Weapon Has Suppression? (Critical)',
+    text:'Does your weapon have a Suppression effect?',yes:'h_supp_aware',no:'h_apply'},
+  h_leth_n:{type:'decision',phase:'attack',title:'Weapon Has Lethality?',
+    text:'Does your weapon have a Lethality rating?',yes:'h_leth_n_info',no:'h_kill_n'},
+  h_leth_n_info:{type:'info',phase:'attack',title:'Make the Lethality Roll',
+    text:'Roll d100 against the Lethality rating.\nSuccess = instant kill.\nFailure = normal HP damage.',next:'h_apply'},
+  h_kill_n:{type:'decision',phase:'attack',title:'Weapon Has Kill Radius?',
+    text:'Does your weapon have a Kill Radius?',yes:'h_kill_info',no:'h_supp_n'},
+  h_supp_n:{type:'decision',phase:'attack',title:'Weapon Has Suppression?',
+    text:'Does your weapon have a Suppression effect?',yes:'h_supp_aware',no:'h_apply'},
+  h_kill_info:{type:'info',phase:'attack',title:'Apply Kill Radius',
+    text:'Apply the Kill Radius effect to all valid targets within the weapon\'s blast zone.',next:'h_apply'},
+  h_supp_aware:{type:'decision',phase:'attack',title:'Target Aware of Danger?',
+    text:'Does the target know they\'re being fired on?',yes:'h_supp_apply',no:'h_no_supp'},
+  h_supp_apply:{type:'info',phase:'attack',title:'Apply Suppression',
+    text:'Target is suppressed. They must pass a WP check or take the suppression penalty next action.',next:'h_apply'},
+  h_no_supp:{type:'info',phase:'attack',title:'Cannot Suppress',
+    text:'Target is unaware of the threat — suppression cannot be applied.',next:'h_apply'},
+  h_apply:{type:'decision',phase:'attack',title:'H) Apply Damage — Combat Over?',
+    text:'Apply all damage and effects. Is the combat now resolved?',
+    yes:'aftermath',no:'end_turn',
+    yesLabel:'Yes — Aftermath',noLabel:'No — Next Turn'},
+
+  // DEFENSE
+  def_start:{type:'info',phase:'defense',title:'Defense',
+    text:'You can defend at any point in initiative order.\nDefending counts as your full action for this turn.',
+    next:'def_aware'},
+  def_aware:{type:'decision',phase:'defense',title:'1) Are You Aware of the Attack?',
+    text:'Do you know you\'re being attacked right now?',yes:'def_pinned',no:'def_no'},
+  def_no:{type:'info',phase:'defense',title:'Cannot Defend',
+    text:'You\'re not aware of the attack — defense is impossible.\nThe attack proceeds uncontested.',next:'def_end'},
+  def_pinned:{type:'decision',phase:'defense',title:'2) Are You Pinned or Pinning?',
+    text:'Are you currently pinned by someone, or actively pinning another combatant?',
+    yes:'def_no',no:'def_choose'},
+  def_choose:{type:'choice',phase:'defense',title:'3) Choose Your Defense',
+    text:'How do you respond to the attack?',
+    options:[
+      {label:'3a) Fight Back',next:'def_fight_choose'},
+      {label:'3b) Dodge',next:'def_dodge_range'},
+    ]},
+  def_fight_choose:{type:'choice',phase:'defense',title:'4a) Fight Back — Choose Action',
+    text:'What fighting-back action do you take?',
+    options:[
+      {label:'Attack',next:'def_fight_roll'},{label:'Called Shot',next:'def_fight_roll'},
+      {label:'Disarm',next:'def_fight_roll'},{label:'Pin',next:'def_fight_roll'},
+    ]},
+  def_fight_roll:{type:'decision',phase:'defense',title:'5a) Opposed Attack Roll',
+    text:'Make an opposed attack roll against your aggressor.\nApply modifiers as in step D.',
+    note:'Enter your attack skill % and roll now. →',
+    diceHint:true,yes:'def_block',no:'def_hit',
+    yesLabel:'My Roll Succeeds',noLabel:'My Roll Fails'},
+  def_block:{type:'info',phase:'defense',title:'Blocked — Counter-Attack',
+    text:'You block their attack. You may now continue with your own attack (F1 or F2) against the aggressor.',
+    next:'def_end'},
+  def_dodge_range:{type:'decision',phase:'defense',title:'3b) Are You in Melee Range?',
+    text:'Is your attacker in melee range of you?',
+    yes:'def_dodge_melee',no:'def_ranged_cover'},
+  def_dodge_melee:{type:'decision',phase:'defense',title:'Dodge — Opposed Roll (Melee)',
+    text:'Make an opposed roll against the aggressor\'s attack.',
+    note:'Enter your Dodge skill % and roll. →',
+    diceHint:true,yes:'def_dodged',no:'def_hit',
+    yesLabel:'My Roll Succeeds',noLabel:'My Roll Fails'},
+  def_dodged:{type:'info',phase:'defense',title:'✓ You Dodged!',
+    text:'Attack dodged. You can use the same result to dodge any other melee attack against you this turn.',next:'def_end'},
+  def_ranged_cover:{type:'decision',phase:'defense',title:'Nearby Cover Available?',
+    text:'Is there cover nearby you can use to reduce damage from this ranged attack?',
+    yes:'def_cover_roll',no:'def_hit'},
+  def_cover_roll:{type:'decision',phase:'defense',title:'Dodge — Opposed Roll (Cover)',
+    text:'Make an opposed roll against the aggressor\'s attack.',
+    note:'Enter your Dodge skill % and roll. →',
+    diceHint:true,yes:'def_reduced',no:'def_hit',
+    yesLabel:'My Roll Succeeds',noLabel:'My Roll Fails'},
+  def_reduced:{type:'info',phase:'defense',title:'Damage Reduced by Cover',
+    text:'Apply received damage, reduced by the cover\'s protection.',next:'def_end'},
+  def_hit:{type:'info',phase:'defense',title:'You Take Full Damage',
+    text:'Apply the incoming damage and effects in full.',next:'def_end'},
+  def_end:{type:'end',phase:'defense',title:'Defense Resolved',
+    text:'Your defensive action is complete.'},
+  end_turn:{type:'end',phase:'end',title:'Turn Complete',
+    text:'Your turn is over. Wait for the initiative order to come back around.'},
+  aftermath:{type:'end',phase:'end',title:'⬡ The Aftermath',
+    text:'Combat is over. Address injuries, sanity loss, and the operational consequences.'},
+};
+
+// ============================
+// STATE
+// ============================
+let round = 1;
+let flowHistory = [];
+const STATUSES = ['Suppressed','Pinned','Hurt','Dying','Insane','Unconscious'];
+let activeStatuses = new Set();
+
+// ============================
+// FLOW
+// ============================
+function startFlow(stepId) {
+  flowHistory = [stepId];
+  renderFlow();
+}
+
+function flowNext(stepId) {
+  flowHistory.push(stepId);
+  renderFlow();
+}
+
+function flowBack() {
+  if (flowHistory.length > 1) {
+    flowHistory.pop();
+    renderFlow();
+  } else {
+    resetFlow();
+  }
+}
+
+function resetFlow() {
+  flowHistory = [];
+  renderFlow();
+}
+
+function renderFlow() {
+  const idle = document.getElementById('flow-idle');
+  const card = document.getElementById('flow-card');
+  const bc   = document.getElementById('breadcrumb');
+  const phase = document.getElementById('tb-phase');
+
+  if (flowHistory.length === 0) {
+    idle.style.display = 'flex';
+    card.style.display = 'none';
+    bc.innerHTML = '';
+    phase.className = 'phase-idle';
+    phase.textContent = 'Idle';
+    return;
+  }
+
+  idle.style.display = 'none';
+  card.style.display = 'block';
+
+  const stepId = flowHistory[flowHistory.length - 1];
+  const step   = FLOWS[stepId];
+
+  // Phase badge
+  const phaseMap = {attack:'Attack',defense:'Defend',end:'End'};
+  const phaseClass = {attack:'phase-attack',defense:'phase-defense',end:'phase-end'};
+  phase.className = phaseClass[step.phase] || 'phase-idle';
+  phase.textContent = phaseMap[step.phase] || '—';
+
+  // Breadcrumb (last 5)
+  const recent = flowHistory.slice(-5);
+  bc.innerHTML = recent.map((id, i) => {
+    const s = FLOWS[id];
+    const isCur = i === recent.length - 1;
+    return (i > 0 ? '<span class="bc-sep">›</span>' : '') +
+      `<span class="bc-item${isCur?' bc-cur':''}">${s.title.replace(/^[A-Z0-9]+\)\s*/,'').substring(0,28)}</span>`;
+  }).join('');
+
+  // Badge
+  const badgeTypes = {decision:'sb-decision',info:'sb-info',choice:'sb-choice',end:'sb-end'};
+  const badgeLabels= {decision:'Decision',info:'Info',choice:'Choose',end:'End'};
+  document.getElementById('step-badge').className = `step-badge ${badgeTypes[step.type]||'sb-info'}`;
+  document.getElementById('step-badge').textContent = badgeLabels[step.type] || step.type;
+
+  document.getElementById('step-title').textContent = step.title;
+  document.getElementById('step-text').textContent  = step.text;
+
+  const noteEl = document.getElementById('step-note');
+  if (step.note) {
+    noteEl.style.display = 'block';
+    noteEl.textContent   = step.note;
+    noteEl.className     = 'step-note' + (step.diceHint ? ' dice-cue' : '');
+  } else {
+    noteEl.style.display = 'none';
+  }
+
+  // Buttons
+  const btnsEl = document.getElementById('flow-btns');
+  btnsEl.innerHTML = '';
+
+  if (step.type === 'decision') {
+    const row = document.createElement('div');
+    row.className = 'flow-btn-row';
+    const y = step.yesLabel || 'Yes';
+    const n = step.noLabel  || 'No';
+    row.innerHTML = `
+      <button class="flow-btn fb-yes" onclick="flowNext('${step.yes}')">${y}</button>
+      <button class="flow-btn fb-no"  onclick="flowNext('${step.no}')">${n}</button>`;
+    btnsEl.appendChild(row);
+  } else if (step.type === 'choice') {
+    step.options.forEach(opt => {
+      const row = document.createElement('div');
+      row.className = 'flow-btn-row';
+      row.innerHTML = `<button class="flow-btn fb-neutral" onclick="flowNext('${opt.next}')">${opt.label}</button>`;
+      btnsEl.appendChild(row);
+    });
+  } else if (step.type === 'info' && step.next) {
+    const row = document.createElement('div');
+    row.className = 'flow-btn-row';
+    row.innerHTML = `<button class="flow-btn fb-cont" onclick="flowNext('${step.next}')">Continue →</button>`;
+    btnsEl.appendChild(row);
+  } else if (step.type === 'end') {
+    const row = document.createElement('div');
+    row.className = 'flow-btn-row';
+    row.innerHTML = `<button class="flow-btn fb-end" onclick="resetFlow()">↺ New Turn</button>`;
+    btnsEl.appendChild(row);
+  }
+
+  // Back btn
+  document.getElementById('back-btn').style.display = flowHistory.length > 1 ? '' : 'none';
+}
+
+// ============================
+// ROUND
+// ============================
+function incRound() {
+  round++;
+  document.getElementById('tb-round-num').textContent = round;
+}
+
+// ============================
+// DICE
+// ============================
+function rollD100() {
+  const skillInput = document.getElementById('dr-skill');
+  const skill = parseInt(skillInput.value) || 0;
+  const roll  = Math.floor(Math.random() * 100) + 1;
+
+  const numEl    = document.getElementById('dr-num');
+  const labelEl  = document.getElementById('dr-label');
+  const detailEl = document.getElementById('dr-detail');
+  const resultEl = document.getElementById('dr-result');
+
+  numEl.textContent = roll;
+  resultEl.className = 'dr-result';
+
+  if (skill > 0) {
+    const crit   = roll <= Math.floor(skill / 5);
+    const fumble = roll >= 99 && skill < 100;
+    if (fumble) {
+      labelEl.textContent  = 'Fumble';
+      detailEl.textContent = `Roll ${roll} — automatic failure`;
+      resultEl.classList.add('dr-fumble');
+    } else if (crit) {
+      labelEl.textContent  = 'Critical!';
+      detailEl.textContent = `Roll ${roll} ≤ ${Math.floor(skill/5)} (skill÷5)`;
+      resultEl.classList.add('dr-critical');
+    } else if (roll <= skill) {
+      labelEl.textContent  = 'Success';
+      detailEl.textContent = `Roll ${roll} ≤ ${skill}%`;
+      resultEl.classList.add('dr-success');
+    } else {
+      labelEl.textContent  = 'Failure';
+      detailEl.textContent = `Roll ${roll} > ${skill}%`;
+      resultEl.classList.add('dr-failure');
+    }
+  } else {
+    labelEl.textContent  = `d100`;
+    detailEl.textContent = 'Enter a skill % for pass/fail';
+    resultEl.classList.add('dr-idle');
+    resultEl.style.color = 'var(--text-dim)';
+  }
+}
+
+function rollRaw(sides) {
+  const r = Math.floor(Math.random() * sides) + 1;
+  document.getElementById('dr-die-result').textContent = `d${sides} → ${r}`;
+}
+
+// ============================
+// STATUSES
+// ============================
+const STATUS_CLASSES = {
+  'Suppressed':'sc-suppressed','Pinned':'sc-pinned','Hurt':'sc-hurt',
+  'Dying':'sc-dying','Insane':'sc-insane','Unconscious':'sc-unconscious'
+};
+
+function buildStatuses() {
+  const el = document.getElementById('status-chips');
+  el.innerHTML = '';
+  STATUSES.forEach(s => {
+    const chip = document.createElement('button');
+    chip.className = 'status-chip ' + (activeStatuses.has(s) ? STATUS_CLASSES[s] : 'sc-off');
+    chip.textContent = s;
+    chip.onclick = () => {
+      if (activeStatuses.has(s)) activeStatuses.delete(s);
+      else activeStatuses.add(s);
+      buildStatuses();
+    };
+    el.appendChild(chip);
+  });
+}
+
+// ============================
+// INIT
+// ============================
+buildStatuses();
+renderFlow();
+
+// Allow Enter to roll d100
+document.getElementById('dr-skill').addEventListener('keydown', e => {
+  if (e.key === 'Enter') rollD100();
+});
+</script>
+</body>
+</html>
